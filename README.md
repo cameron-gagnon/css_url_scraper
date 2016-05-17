@@ -1,4 +1,4 @@
-# URL_SCRAPER
+# CSS_URL_SCRAPER
 
 python3.5 is what this was written in, but most python3.x's should work.
 
