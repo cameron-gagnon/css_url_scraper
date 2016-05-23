@@ -55,9 +55,9 @@ def download_asset(remote_file_path, local_file_path):
     url = DOMAIN + remote_file_path
     try:
         r = requests.get(url, stream=True)
-        // uses [1:] because we get rid of the first '.' in the file name
-        // since we're running this script in a different working directory
-        // than where the url's will be pointing within the css files.
+        # uses [1:] because we get rid of the first '.' in the file name
+        # since we're running this script in a different working directory
+        # than where the url's will be pointing within the css files.
         with open(local_file_path[1:], 'wb') as file:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk: # filter out keep-alive new chunks
