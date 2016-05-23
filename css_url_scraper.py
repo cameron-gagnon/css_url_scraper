@@ -41,13 +41,13 @@ def sort_file(filename):
        '.tif' in filename or \
        '.tga' in filename or \
        '.jpg' in filename:
-        return './images/'
+        return '../images/'
 
     if '.woff' in filename or \
        '.eot' in filename or \
        '.otf' in filename or \
        '.ttf' in filename:
-        return './fonts/'
+        return '../fonts/'
 
     raise BadFileTypeException(filename)
 
@@ -55,7 +55,10 @@ def download_asset(remote_file_path, local_file_path):
     url = DOMAIN + remote_file_path
     try:
         r = requests.get(url, stream=True)
-        with open(local_file_path, 'wb') as file:
+        // uses [1:] because we get rid of the first '.' in the file name
+        // since we're running this script in a different working directory
+        // than where the url's will be pointing within the css files.
+        with open(local_file_path[1:], 'wb') as file:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk: # filter out keep-alive new chunks
                     file.write(chunk)
@@ -63,8 +66,9 @@ def download_asset(remote_file_path, local_file_path):
         eprint(print_success("Downloaded: " + remote_file_path + " -> " +
                              local_file_path))
 
-    except:
+    except Exception as e:
         eprint("ERROR!! Could not download font/image from: " + remote_file_path)
+        eprint(e)
         sys.exit(1)
 
 def replacer_functor(match_object):
@@ -82,7 +86,7 @@ def replacer_functor(match_object):
     # determines the filetype and returns it (font, image, etc.)
     file_type = sort_file(filename)
 
-    # ex. ./images/img.png
+    # ex. ../images/img.png
     local_file_path = file_type + filename
 
     # downloads the file that was found
