@@ -6,10 +6,10 @@ import os
 import requests
 from fileinput import FileInput
 
-DOMAIN = 'https://static.licdn.com'
-RE_EXPR = re.compile("""url\([\'\"]  # matches literal url( or url(
+DOMAIN = ''
+RE_EXPR = re.compile("""url\(['|"]?  # matches literal url( or url(
                      (.*?)         # captures any char seq eg. /path/to/item.png
-                     [\'\"]\)""",    # matches literal ') or ")
+                     ['|"]?\)""",    # matches literal ') or ")
                       re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 class BadFileTypeException(Exception):
@@ -19,12 +19,16 @@ class BadFileTypeException(Exception):
         self.filename = filename
 
 
+def error(message):
+    """ Prints a message in red """
+    print(print_error(message))
+
 def print_error(message):
-    """ Prints message in red """
+    """ returns a message to be printed in red """
     return '\033[31m{}\033[0m'.format(str(message))
 
 def print_success(message):
-    """ Prints message in green """
+    """ returns a message to be printed in green """
     return '\033[32m{}\033[0m'.format(str(message))
 
 def eprint(*args, **kwargs):
@@ -40,7 +44,8 @@ def sort_file(filename):
        '.ico' in filename or \
        '.tif' in filename or \
        '.tga' in filename or \
-       '.jpg' in filename:
+       '.jpg' in filename or \
+       '.svg' in filename:
         return '../images/'
 
     if '.woff' in filename or \
@@ -53,6 +58,12 @@ def sort_file(filename):
 
 def download_asset(remote_file_path, local_file_path):
     url = DOMAIN + remote_file_path
+
+    # sometimes the full url path including domain is specified
+    # in the 'url(...)'
+    if ('http' in remote_file_path):
+        url = remote_file_path
+
     try:
         r = requests.get(url, stream=True)
         # uses [1:] because we get rid of the first '.' in the file name
@@ -67,8 +78,8 @@ def download_asset(remote_file_path, local_file_path):
                              local_file_path))
 
     except Exception as e:
-        eprint("ERROR!! Could not download font/image from: " + remote_file_path)
-        eprint(e)
+        eprint(print_error("ERROR!! Could not download font/image from: " + remote_file_path))
+        eprint(print_error(e))
         sys.exit(1)
 
 def replacer_functor(match_object):
@@ -118,12 +129,17 @@ def find_replace(file_to_search):
 
 def setUp():
     """checks for fonts, images, and styles directories"""
+
     try:
         files_to_search = os.listdir('./styles')
     except:
-        print_error("No stylesheets to search!")
-        print_error("Exiting...")
+        error("No stylesheets to search!")
+        error("Exiting...")
         sys.exit(1)
+
+#    if (DOMAIN == ''):
+#        error("PLEASE SET A ROOT DOMAIN TO DOWNLOAD FROM")
+#        sys.exit(1)
 
     for i, file in enumerate(files_to_search):
         files_to_search[i] = os.path.join(os.getcwd() + '/styles/', file)
